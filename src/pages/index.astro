@@ -1,0 +1,439 @@
+---
+import { Image } from 'astro:assets';
+import Layout from '../layouts/Layout.astro';
+import Icon from '../components/Icon.astro';
+import RequestButton from '../components/RequestButton.astro';
+import heroPhoto from '../assets/barber-detail.jpg';
+import studioPhoto from '../assets/barber-studio.jpg';
+import { site } from '../content/site.ts';
+import { formatPrice } from '../lib/catalog.ts';
+import { days, formatIntervals } from '../lib/hours.ts';
+import { validateSite } from '../lib/validation.ts';
+validateSite(site);
+const branch = site.branches.find((b) => b.id === site.activeBranchId)!;
+const mapsUrl =
+  site.mode === 'live' && branch.mapsQuery
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(branch.mapsQuery)}`
+    : undefined;
+---
+
+<Layout
+  title={`${site.name} — Tu estilo. Bien hecho.`}
+  description="Cortes, barba y detalles con actitud urbana. Conoce nuestros servicios y solicita tu cita por WhatsApp. Demostración de plantilla para barberías."
+>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="#inicio" aria-label={`${site.name}, inicio`}>
+        <span class="brand-symbol">
+          {site.logo ? (
+            <img
+              src={site.logo.src}
+              alt={site.logo.alt}
+              width="42"
+              height="42"
+            />
+          ) : (
+            <Icon name="scissors" />
+          )}
+        </span>
+        <span>
+          <span class="brand-name">
+            {site.name}
+            <span class="brand-dot">.</span>
+          </span>
+          <span class="brand-descriptor">{site.descriptor}</span>
+        </span>
+      </a>
+      <nav class="desktop-nav" aria-label="Navegación principal">
+        <a href="#inicio">Inicio</a>
+        <a href="#servicios">Servicios</a>
+        <a href="#contacto">Visítanos</a>
+      </nav>
+      <div class="header-right">
+        {site.mode === 'demo' && <span class="demo-tag">DEMO</span>}
+        <RequestButton
+          class="header-cta"
+          label="Hablemos de tu corte"
+          variant="outline"
+        />
+        <details class="mobile-menu">
+          <summary aria-label="Abrir menú de navegación">
+            <span>Menú</span>
+            <span class="menu-lines" aria-hidden="true"></span>
+          </summary>
+          <nav aria-label="Navegación móvil">
+            <a href="#inicio">
+              Inicio <Icon name="diagonal" />
+            </a>
+            <a href="#servicios">
+              Servicios y precios <Icon name="diagonal" />
+            </a>
+            <a href="#contacto">
+              Visítanos <Icon name="diagonal" />
+            </a>
+          </nav>
+        </details>
+      </div>
+    </div>
+  </header>
+  <main id="contenido">
+    <section class="hero container" id="inicio" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="eyebrow">
+          <span class="tiny-line"></span>
+          {site.copy.eyebrow}
+        </p>
+        <h1 id="hero-title">
+          <span>{site.copy.headline[0]}</span>
+          <span class="accent-text">{site.copy.headline[1]}</span>
+        </h1>
+        <p class="hero-intro">{site.copy.introduction}</p>
+        <div class="hero-actions" data-hero-actions>
+          <RequestButton label="Solicitar cita por WhatsApp" icon="chat" />
+          <a class="secondary-link" href="#servicios">
+            Ver servicios y precios <Icon name="arrow" />
+          </a>
+        </div>
+        <p class="hero-note">
+          <span class="small-dot"></span> Tu cita se acuerda contigo. Sin
+          complicaciones.
+        </p>
+        <div class="hero-signature">
+          <span>
+            CORTE <span class="separator">/</span> BARBA{' '}
+            <span class="separator">/</span> ESTILO
+          </span>
+          <a href="#servicios" aria-label="Descubrir nuestros servicios">
+            <span>DESCUBRE DISTRITO</span>
+            <span class="down-arrow" aria-hidden="true">
+              ↓
+            </span>
+          </a>
+        </div>
+      </div>
+      <figure class="hero-image">
+        <Image
+          src={heroPhoto}
+          alt="Detalle de un barbero trabajando con máquina y peine en un corte de cabello"
+          widths={[480, 760, 1100]}
+          sizes="(max-width: 767px) 100vw, 48vw"
+          format="webp"
+          loading="eager"
+          fetchpriority="high"
+        />
+        <div class="photo-label">
+          <span>
+            EL ESTILO ESTÁ
+            <br />
+            EN LOS DETALLES.
+          </span>
+          <Icon name="plus" />
+        </div>
+        <figcaption>
+          <span>01 / EL OFICIO</span>
+          <span>Fotografía de referencia</span>
+        </figcaption>
+      </figure>
+    </section>
+    <div class="manifesto" aria-label="Nuestra esencia">
+      <div class="container">
+        <span>BUEN CORTE.</span>
+        <Icon name="plus" />
+        <span>BUENA ACTITUD.</span>
+        <Icon name="plus" />
+        <span>MUY TÚ.</span>
+        <Icon name="plus" />
+      </div>
+    </div>
+    <section
+      class="services container section"
+      id="servicios"
+      aria-labelledby="services-title"
+    >
+      <div class="section-heading">
+        <p class="eyebrow section-index">01 / SERVICIOS</p>
+        <div>
+          <h2 id="services-title">
+            Un buen corte.
+            <br />
+            <span class="muted-text">Un mejor día.</span>
+          </h2>
+          <p>Elige lo que va contigo. Nosotros nos encargamos del detalle.</p>
+        </div>
+      </div>
+      <div class="catalog-toolbar">
+        <div class="filters" role="group" aria-label="Filtrar servicios" hidden>
+          <button
+            type="button"
+            data-filter="all"
+            aria-pressed="true"
+            aria-controls="lista-servicios"
+          >
+            Todos
+          </button>
+          {site.categories.map((category) => (
+            <button
+              type="button"
+              data-filter={category.id}
+              aria-pressed="false"
+              aria-controls="lista-servicios"
+            >
+              {category.name}
+            </button>
+          ))}
+        </div>
+        <p class="catalog-note">
+          {site.mode === 'demo' ? 'PRECIOS DE EJEMPLO' : 'PRECIOS EN'}{' '}
+          <span>· {site.currency}</span>
+        </p>
+      </div>
+      <p class="sr-only" data-filter-status aria-live="polite"></p>
+      <div id="lista-servicios">
+        {site.categories.map((category, categoryIndex) => (
+          <section
+            class="service-group"
+            data-service-group={category.id}
+            aria-labelledby={`category-${category.id}`}
+          >
+            <h3 id={`category-${category.id}`}>
+              <span>{category.name}</span>
+              <span>/{String(categoryIndex + 1).padStart(2, '0')}</span>
+            </h3>
+            {site.services
+              .filter((service) => service.category === category.id)
+              .map((service) => (
+                <article class="service-row">
+                  <div class="service-info">
+                    <h4>{service.name}</h4>
+                    <p>{service.description}</p>
+                  </div>
+                  <div class="service-price">
+                    <span>
+                      {formatPrice(service.price, site.locale, site.currency)}
+                    </span>
+                    {service.duration && (
+                      <small>
+                        <Icon name="clock" /> {service.duration} min aprox.
+                      </small>
+                    )}
+                  </div>
+                  <RequestButton
+                    label="Solicitar"
+                    service={service.id}
+                    variant="text"
+                  />
+                </article>
+              ))}
+          </section>
+        ))}
+      </div>
+      <p class="catalog-bottom">
+        <Icon name="chat" />
+        <span>
+          ¿Tienes algo distinto en mente?{' '}
+          <RequestButton
+            label="Cuéntanos por WhatsApp"
+            variant="text"
+            icon="arrow"
+          />
+        </span>
+      </p>
+    </section>
+    <section
+      class="contact-section section"
+      id="contacto"
+      aria-labelledby="contact-title"
+    >
+      <div class="container">
+        <div class="section-heading">
+          <p class="eyebrow section-index">02 / VISÍTANOS</p>
+          <div>
+            <h2 id="contact-title">
+              Tu siguiente corte
+              <br />
+              <span class="muted-text">empieza aquí.</span>
+            </h2>
+            <p>Haz una pausa. Ponte cómodo. Dale un nuevo aire a tu estilo.</p>
+          </div>
+        </div>
+        <div class="contact-grid">
+          <figure class="studio-image">
+            <Image
+              src={studioPhoto}
+              alt="Interior de una barbería contemporánea con un barbero atendiendo a un cliente"
+              widths={[480, 800, 1100]}
+              sizes="(max-width: 767px) 100vw, 48vw"
+              format="webp"
+              loading="lazy"
+            />
+            <figcaption>
+              <span>UN ESPACIO PARA TU ESTILO.</span>
+              <Icon name="diagonal" />
+            </figcaption>
+          </figure>
+          <div class="branch-info">
+            <div class="branch-top">
+              <p class="eyebrow">{branch.name}</p>
+              <span class="open-status" data-open-status>
+                <span class="small-dot"></span>
+                <span data-open-label>Consulta el horario</span>
+              </span>
+            </div>
+            <h3>
+              Nos vemos
+              <br />
+              en la silla.
+            </h3>
+            <address>
+              {branch.address}
+              <br />
+              <span>{branch.locality}</span>
+            </address>
+            {branch.reference && <p class="address-note">{branch.reference}</p>}
+            {mapsUrl ? (
+              <a
+                class="directions-link"
+                href={mapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Icon name="pin" /> Cómo llegar <Icon name="diagonal" />
+              </a>
+            ) : (
+              <button
+                class="directions-link"
+                data-demo-map
+                type="button"
+                aria-haspopup="dialog"
+              >
+                <Icon name="pin" /> Cómo llegar <Icon name="diagonal" />
+              </button>
+            )}
+            <div class="hours">
+              <div class="hours-title">
+                <span>Horario de atención</span>
+                <span data-zone-label>Hora de la barbería</span>
+              </div>
+              <dl>
+                {days.map((day) => (
+                  <div data-weekday={day.index}>
+                    <dt>{day.name}</dt>
+                    <dd>{formatIntervals(branch.weekly[day.index] ?? [])}</dd>
+                  </div>
+                ))}
+              </dl>
+              <p class="today-note" data-today-note aria-live="polite"></p>
+            </div>
+            <RequestButton
+              label="Solicitar mi cita"
+              class="contact-cta"
+              icon="chat"
+            />
+            <p class="contact-note" data-response-note>
+              Escríbenos para acordar fecha y hora. Tu cita está sujeta a
+              confirmación.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="closing container">
+      <Icon name="scissors" />
+      <p>
+        EL CORTE CAMBIA.
+        <br />
+        <span>LA ACTITUD SE QUEDA.</span>
+      </p>
+      <a href="#inicio" aria-label="Volver al inicio">
+        ↑
+      </a>
+    </section>
+  </main>
+  <footer class="site-footer">
+    <div class="container footer-main">
+      <a class="brand footer-brand" href="#inicio">
+        <span class="brand-name">
+          {site.name}
+          <span class="brand-dot">.</span>
+        </span>
+        <span class="brand-descriptor">{site.descriptor}</span>
+      </a>
+      <p>Tu estilo. Bien hecho.</p>
+      <span>HECHO PARA SER TÚ.</span>
+    </div>
+    <div class="container footer-bottom">
+      <p>
+        {site.mode === 'demo'
+          ? 'Plantilla de demostración · Marca, servicios, precios y horarios ficticios.'
+          : `${site.name} · Todos los derechos reservados.`}
+      </p>
+      {site.mode === 'demo' && (
+        <p>Fotografías de banco · No representan este negocio.</p>
+      )}
+    </div>
+  </footer>
+  <div class="mobile-contact" data-mobile-contact hidden>
+    <div data-floating>
+      <RequestButton
+        variant="icon"
+        icon="chat"
+        ariaLabel="Solicitar cita por WhatsApp"
+      />
+    </div>
+    <div class="mobile-bar" data-contact-bar hidden>
+      <div>
+        <strong>Tu próximo corte.</strong>
+        <small>Vamos a darle forma.</small>
+      </div>
+      <RequestButton label="Solicitar cita" icon="chat" />
+    </div>
+  </div>
+  {site.mode === 'demo' && (
+    <dialog
+      id="demo-dialog"
+      aria-labelledby="dialog-title"
+      aria-describedby="dialog-description"
+    >
+      <div class="dialog-top">
+        <span class="eyebrow">VISTA PREVIA · DEMO</span>
+        <button
+          type="button"
+          class="close-button"
+          data-close-dialog
+          aria-label="Cerrar vista previa"
+          autofocus
+        >
+          <Icon name="close" />
+        </button>
+      </div>
+      <span class="dialog-icon">
+        <Icon name="chat" />
+      </span>
+      <h2 id="dialog-title">
+        Así empieza
+        <br />
+        tu próximo corte.
+      </h2>
+      <p id="dialog-description">
+        Este es el mensaje que se prepararía en WhatsApp. Esta demostración no
+        contacta a ningún negocio.
+      </p>
+      <blockquote data-preview-message></blockquote>
+      <p class="dialog-note">
+        La fecha y la hora se acuerdan en la conversación. La barbería confirma
+        la cita.
+      </p>
+      <button type="button" class="button button--primary" data-close-dialog>
+        Entendido <Icon name="arrow" />
+      </button>
+    </dialog>
+  )}
+  <script
+    id="branch-data"
+    type="application/json"
+    set:html={JSON.stringify(branch).replace(/</g, '\\u003c')}
+  />
+  <script>
+    import '../scripts/page.ts';
+  </script>
+</Layout>

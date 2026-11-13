@@ -1,0 +1,57 @@
+---
+import Icon from './Icon.astro';
+import { site } from '../content/site.ts';
+import { requestMessage, whatsappUrl } from '../lib/catalog.ts';
+interface Props {
+  label?: string;
+  service?: string;
+  variant?: 'primary' | 'outline' | 'text' | 'icon';
+  class?: string;
+  icon?: 'arrow' | 'diagonal' | 'chat';
+  ariaLabel?: string;
+}
+const {
+  label = 'Solicitar cita',
+  service,
+  variant = 'primary',
+  class: className,
+  icon = 'diagonal',
+  ariaLabel,
+} = Astro.props;
+const branch = site.branches.find((b) => b.id === site.activeBranchId)!;
+const chosen = site.services.find((s) => s.id === service);
+const message = requestMessage(site.copy.requestIntro, branch.name, chosen);
+const styles = `button button--${variant} ${className ?? ''}`;
+const baseLabel =
+  ariaLabel ??
+  (chosen
+    ? `${label}: ${chosen.name}`
+    : label.includes('WhatsApp')
+      ? label
+      : `${label} por WhatsApp`);
+---
+
+{site.mode === 'live' && branch.whatsapp ? (
+  <a
+    class={styles}
+    href={whatsappUrl(branch.whatsapp, message)}
+    target="_blank"
+    rel="noopener noreferrer"
+    aria-label={`${baseLabel} (abre WhatsApp)`}
+  >
+    {variant !== 'icon' && <span>{label}</span>}
+    <Icon name={icon} />
+  </a>
+) : (
+  <button
+    class={styles}
+    type="button"
+    data-request
+    data-message={message}
+    aria-label={baseLabel}
+    aria-haspopup="dialog"
+  >
+    {variant !== 'icon' && <span>{label}</span>}
+    <Icon name={icon} />
+  </button>
+)}
